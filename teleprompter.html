@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teleprompter — Video ETL 15 min</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#111;color:#eee;font-family:'Segoe UI',Arial,sans-serif;font-size:28px;line-height:1.8;padding:40px 60px}
+  .section{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:40px 0;border-bottom:2px solid #333}
+  .time{font-size:18px;color:#666;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+  .speaker{font-size:22px;font-weight:700;padding:6px 16px;border-radius:6px;display:inline-block;margin-bottom:20px}
+  .speaker.christian{background:#FE492A;color:#fff}
+  .speaker.alexandra{background:#3B82F6;color:#fff}
+  .speaker.koraima{background:#73C14E;color:#fff}
+  .speaker.juanse{background:#D97F06;color:#fff}
+  .speaker.todos{background:#fff;color:#111}
+  .text{font-size:32px;line-height:1.7;color:#fff;max-width:900px}
+  .text em{color:#FE492A;font-style:normal;font-weight:700}
+  .note{font-size:16px;color:#555;margin-top:20px;font-style:italic}
+  .num{color:#73C14E;font-weight:700}
+  .nav{position:fixed;bottom:20px;right:30px;display:flex;gap:10px;z-index:99}
+  .nav button{background:#333;color:#fff;border:none;padding:12px 24px;font-size:18px;border-radius:8px;cursor:pointer}
+  .nav button:hover{background:#555}
+  .progress{position:fixed;top:0;left:0;height:4px;background:#FE492A;transition:width .3s;z-index:99}
+  h2{font-size:20px;color:#444;margin-bottom:30px;text-transform:uppercase;letter-spacing:3px}
+  @media(max-width:600px){
+    body{font-size:22px;padding:20px 24px}
+    .text{font-size:24px}
+    .section{padding:20px 0}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="prog"></div>
+
+<!-- SECCION 1: APERTURA — CHRISTIAN -->
+<div class="section" id="s1">
+  <div class="time">0:00 — 2:00 minutos</div>
+  <span class="speaker christian">CHRISTIAN</span>
+  <h2>Apertura + El Problema</h2>
+  <div class="text">
+    Hola, somos el equipo: Christian Trujillo, Alexandra Libreros, Juan Sebastian Hoyos y Koraima Torres.
+    <br><br>
+    Nuestro proyecto es un pipeline ETL para un cliente real: una empresa de <em>seguros de vehiculos en Guatemala</em>.
+    <br><br>
+    Este cliente tenia <em>5 plataformas separadas</em>: Google Ads, Meta Ads, Google Analytics, Search Console y su sistema de ventas.
+    <br><br>
+    Cada una con formato diferente. Sin conexion entre si. No podia responder una pregunta basica: <em>cuanto invierto y cuanto vendo?</em>
+    <br><br>
+    Eso es lo que resolvimos.
+  </div>
+  <div class="note">Mostrar: primera seccion del dashboard (KPIs generales)</div>
+</div>
+
+<!-- SECCION 2: LA SOLUCION — ALEXANDRA -->
+<div class="section" id="s2">
+  <div class="time">2:00 — 5:00 minutos</div>
+  <span class="speaker alexandra">ALEXANDRA</span>
+  <h2>La Solucion — El Pipeline</h2>
+  <div class="text">
+    Construimos un pipeline en Python con <em>4 archivos modulares</em>:
+    <br><br>
+    <em>Extract</em> — lee las 5 fuentes de datos. Google Ads con <span class="num">1,219</span> filas, Meta Ads con <span class="num">26</span> filas, Google Analytics con <span class="num">7,446</span> filas, Search Console con <span class="num">335</span> filas, y Ventas con <span class="num">1,011</span> polizas.
+    <br><br>
+    <em>Transform</em> — limpia todo: estandariza las fechas porque cada fuente tenia un formato diferente, elimina duplicados y nulos — el resultado fue <span class="num">cero</span> en ambos. Convierte los montos de Quetzales guatemaltecos a dolares y une las 5 fuentes en una sola tabla usando la fecha como columna comun.
+    <br><br>
+    <em>Load</em> — guarda el resultado como master table y genera un reporte de calidad automatico.
+    <br><br>
+    <em>Pipeline</em> — el orquestador. Llama a los tres en orden. Todo corre en <span class="num">0.2 segundos</span>.
+    <br><br>
+    El resultado: una <em>Master Table de 363 filas por 16 columnas</em>. Una fila por cada dia del 2025, con datos de las 5 fuentes unificados.
+  </div>
+  <div class="note">Mostrar: seccion 7 del dashboard (tabla del pipeline ETL)</div>
+</div>
+
+<!-- SECCION 3: HALLAZGOS — KORAIMA -->
+<div class="section" id="s3">
+  <div class="time">5:00 — 8:00 minutos</div>
+  <span class="speaker koraima">KORAIMA</span>
+  <h2>Los Hallazgos</h2>
+  <div class="text">
+    Con esa master table hicimos el analisis exploratorio. Estos son los resultados:
+    <br><br>
+    Inversion total del 2025: <span class="num">$52,906 dolares</span>. Google Ads concentro el 81% y Meta el 19%.
+    <br><br>
+    Revenue total: <span class="num">$187,413 dolares</span>. Se vendieron <span class="num">1,011 polizas</span>. Eso da un retorno de <em>3.54 dolares por cada dolar invertido</em>.
+    <br><br>
+    <em>Performance Max</em> con solo el 15% del presupuesto de Google genero el costo mas bajo por conversion: <span class="num">$1.36</span>. Display gasto similar y costo <span class="num">$34.63</span> por conversion — es decir, <em>25 veces mas caro</em>.
+    <br><br>
+    En Meta, las campanas de WhatsApp costaron <span class="num">$193 por mensaje</span> y no hay forma de saber si se convirtieron en polizas porque <em>no hay CRM conectado</em>.
+    <br><br>
+    El segundo semestre concentro el <span class="num">72%</span> de las visitas al sitio web con menor inversion. El canal organico compenso.
+    <br><br>
+    Y hay dos productos: Auto por Kilometro con 967 polizas a $168 promedio, y Auto Tradicional con solo 44 polizas pero a <span class="num">$560 promedio</span> — vale <em>3.3 veces mas</em>. No hay campanas especificas para el producto de mayor valor.
+  </div>
+  <div class="note">Mostrar: secciones 1 a 5 del dashboard (ir pasando mientras habla)</div>
+</div>
+
+<!-- SECCION 4: DASHBOARD EN VIVO — JUAN SEBASTIAN -->
+<div class="section" id="s4">
+  <div class="time">8:00 — 11:00 minutos</div>
+  <span class="speaker juanse">JUAN SEBASTIAN</span>
+  <h2>Dashboard en Vivo</h2>
+  <div class="text">
+    Todo esto lo pueden ver en vivo en el dashboard que publicamos en GitHub Pages:
+    <br><br>
+    <em>thepipo93.github.io/etl-dashboard-ipalmera</em>
+    <br><br>
+    Funciona en cualquier navegador, sin instalar nada. Tiene 7 secciones:
+    <br><br>
+    Primero la <em>inversion por canal</em> — Google Ads versus Meta. Luego el <em>comportamiento mensual</em> — como vario la inversion y las ventas mes a mes.
+    <br><br>
+    Despues <em>ventas y productos</em> — el desglose entre Auto KM y Auto Tradicional. El <em>trafico web</em> de Google Analytics con las sesiones mensuales.
+    <br><br>
+    Las <em>busquedas organicas</em> de Search Console. Y al final la seccion de <em>que funciono, que no funciono y donde invertir en 2026</em>.
+    <br><br>
+    Cada grafica tiene un titulo que dice la conclusion, no solo una etiqueta. Y debajo de cada una hay una nota con el hallazgo que no se ve a primera vista.
+  </div>
+  <div class="note">Mostrar: navegar el dashboard en vivo, ir seccion por seccion</div>
+</div>
+
+<!-- SECCION 5: RECOMENDACIONES — CHRISTIAN -->
+<div class="section" id="s5">
+  <div class="time">11:00 — 13:00 minutos</div>
+  <span class="speaker christian">CHRISTIAN</span>
+  <h2>Recomendaciones y Siguiente Paso</h2>
+  <div class="text">
+    Con base en los datos, estas son las recomendaciones:
+    <br><br>
+    <em>Uno:</em> Conectar WhatsApp de Meta con un CRM para medir si esos 22 mensajes de $193 cada uno realmente se convirtieron en polizas. Hoy no lo sabemos.
+    <br><br>
+    <em>Dos:</em> Crear campanas especificas para Auto Tradicional. Son solo 44 polizas pero cada una vale 3.3 veces mas que una de Auto KM. Con una campana dedicada se podria aumentar el revenue sin aumentar el presupuesto.
+    <br><br>
+    <em>Tres:</em> Migrar la carga de CSV a una base de datos MySQL con CREATE TABLE dinamico, como vimos en la ultima clase con el profesor. Usar cursor, executemany y commit para que el pipeline sea escalable.
+    <br><br>
+    <em>Cuatro:</em> Automatizar la extraccion con APIs en vez de CSVs manuales, y exponer el pipeline como servicio con FastAPI.
+  </div>
+  <div class="note">Mostrar: seccion 6 del dashboard (que funciono / que no)</div>
+</div>
+
+<!-- SECCION 6: CIERRE — TODOS -->
+<div class="section" id="s6">
+  <div class="time">13:00 — 15:00 minutos</div>
+  <span class="speaker todos">TODOS</span>
+  <h2>Cierre y Limitaciones</h2>
+  <div class="text">
+    <em>Limitaciones del analisis:</em>
+    <br><br>
+    Enero es parcial — Google Analytics se activo el dia 23, faltan 22 dias.
+    <br>
+    Meta no tiene trazabilidad a ventas — no hay CRM conectado.
+    <br>
+    Search Console y Ventas se descargaron manual, no via API.
+    <br>
+    El analisis es descriptivo, no predictivo.
+    <br><br>
+    <em>En resumen:</em>
+    <br><br>
+    Este pipeline convierte lo que antes tomaba <span class="num">4 horas</span> de trabajo manual en hojas de calculo separadas, en un proceso automatizado de <span class="num">0.2 segundos</span>.
+    <br><br>
+    Los datos estan anonimizados, el codigo esta en GitHub, y esta disenado para correr en cualquier maquina.
+    <br><br>
+    Gracias.
+  </div>
+  <div class="note">Dashboard en la pantalla principal. Todos visibles.</div>
+</div>
+
+<div class="nav">
+  <button onclick="prev()">&#9650; Anterior</button>
+  <button onclick="next()">&#9660; Siguiente</button>
+</div>
+
+<script>
+const sections = document.querySelectorAll('.section');
+let current = 0;
+const prog = document.getElementById('prog');
+
+function go(i) {
+  if (i < 0 || i >= sections.length) return;
+  current = i;
+  sections[i].scrollIntoView({behavior:'smooth',block:'start'});
+  prog.style.width = ((i+1)/sections.length*100)+'%';
+}
+function next() { go(current+1); }
+function prev() { go(current-1); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+});
+
+// Touch swipe for mobile
+let touchY = 0;
+document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; });
+document.addEventListener('touchend', e => {
+  const diff = touchY - e.changedTouches[0].clientY;
+  if (diff > 50) next();
+  if (diff < -50) prev();
+});
+</script>
+</body>
+</html>
