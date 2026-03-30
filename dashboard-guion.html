@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard + Guion — Video ETL</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#F4F6F8;color:#2C3E50;font-size:14px}
+  .container{max-width:1100px;margin:0 auto;padding:24px}
+
+  .header{background:#1B4F72;color:#fff;padding:22px 26px;border-radius:8px;margin-bottom:22px}
+  .header h1{font-size:17px;font-weight:700;line-height:1.4;margin-bottom:6px}
+  .header p{font-size:12px;opacity:.7}
+
+  .context-box{background:#fff;border-left:4px solid #1B4F72;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:22px;font-size:13px;line-height:1.7}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px}
+  .kpi{background:#fff;border-radius:8px;padding:16px;text-align:center;border-bottom:3px solid #1B4F72}
+  .kpi.green{border-bottom-color:#27AE60}
+  .kpi.gray{border-bottom-color:#BDC3C7}
+  .kpi-label{font-size:11px;color:#95A5A6;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+  .kpi-value{font-size:22px;font-weight:700;color:#1B4F72}
+  .kpi.green .kpi-value{color:#27AE60}
+  .kpi-sub{font-size:11px;color:#BDC3C7;margin-top:3px}
+
+  .section{background:#fff;border-radius:8px;padding:22px;margin-bottom:22px;position:relative}
+  .section-num{font-size:11px;font-weight:700;color:#BDC3C7;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  .section-title{font-size:15px;font-weight:700;color:#2C3E50;margin-bottom:4px;line-height:1.4}
+  .section-sub{font-size:12px;color:#95A5A6;margin-bottom:18px;line-height:1.5}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  canvas{max-height:220px}
+
+  .verdict-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+  .verdict-card{border-radius:6px;padding:14px}
+  .verdict-card.funciono{background:#EAFAF1;border-top:3px solid #27AE60}
+  .verdict-card.nofunciono{background:#FDEDEC;border-top:3px solid #E74C3C}
+  .verdict-card.pendiente{background:#FEF9E7;border-top:3px solid #F39C12}
+  .verdict-card.oportunidad{background:#EBF5FB;border-top:3px solid #1B4F72}
+  .verdict-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+  .verdict-title.verde{color:#1E8449}
+  .verdict-title.rojo{color:#C0392B}
+  .verdict-title.amarillo{color:#B7950B}
+  .verdict-title.azul{color:#1B4F72}
+  .verdict-item{font-size:12px;line-height:1.6;margin-bottom:4px;padding-left:12px;position:relative}
+  .verdict-item::before{content:'>';position:absolute;left:0;font-weight:700}
+
+  .mini-stat{background:#F8F9FA;border-radius:6px;padding:12px;text-align:center}
+  .mini-stat-val{font-size:19px;font-weight:700;color:#1B4F72;margin-bottom:2px}
+  .mini-stat-label{font-size:11px;color:#95A5A6}
+
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:14px}
+  th{background:#F4F6F8;color:#7F8C8D;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.3px;padding:8px 10px;text-align:left;border-bottom:2px solid #E8E8E8}
+  td{padding:8px 10px;border-bottom:1px solid #F0F0F0;vertical-align:middle}
+
+  .chart-note{font-size:11px;color:#7F8C8D;margin-top:8px;line-height:1.6}
+
+  .footer{text-align:center;font-size:11px;color:#BDC3C7;padding:16px;margin-top:6px}
+
+  /* ═══ GLOBITOS POKEMON ═══ */
+  .speech{position:relative;background:#222;color:#fff;border:3px solid #444;border-radius:12px;padding:14px 18px;margin-bottom:18px;font-size:14px;line-height:1.6;font-family:'Courier New',monospace;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .speech::after{content:'';position:absolute;bottom:-12px;left:30px;width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:12px solid #222}
+  .speech .who{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:inline-block;padding:2px 8px;border-radius:4px}
+  .speech .who.christian{background:#FE492A}
+  .speech .who.alexandra{background:#3B82F6}
+  .speech .who.koraima{background:#73C14E;color:#111}
+  .speech .who.juanse{background:#D97F06}
+  .speech .who.todos{background:#fff;color:#111}
+  .speech .tiempo{float:right;font-size:11px;color:#888;font-family:'Segoe UI',sans-serif}
+
+  .toggle-btn{position:fixed;top:10px;right:10px;z-index:999;background:#222;color:#fff;border:2px solid #FE492A;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Courier New',monospace}
+  .toggle-btn:hover{background:#FE492A}
+  body.hide-speech .speech{display:none}
+
+  @media(max-width:700px){
+    .kpi-row,.grid2,.grid3,.verdict-grid{grid-template-columns:1fr 1fr}
+    canvas{max-height:180px}
+  }
+</style>
+</head>
+<body>
+
+<button class="toggle-btn" onclick="document.body.classList.toggle('hide-speech')">Mostrar/Ocultar Guion</button>
+
+<div class="container">
+
+<!-- GLOBITO: APERTURA -->
+<div class="speech">
+  <span class="who christian">Christian</span><span class="tiempo">0:00 - 2:00</span>
+  <div>Hola, somos el equipo: Christian Trujillo, Alexandra Libreros, Juan Sebastian Hoyos y Koraima Torres. Nuestro proyecto es un pipeline ETL para un cliente real de seguros de vehiculos en Guatemala. Este cliente tenia 5 plataformas separadas — Google Ads, Meta, Analytics, Search Console y ventas. Sin conexion entre si. No podia responder: cuanto invierto y cuanto vendo? Eso es lo que resolvimos.</div>
+</div>
+
+<!-- ENCABEZADO -->
+<div class="header">
+  <h1>En 2025, Cliente A invirtio $52,906 en publicidad digital y vendio 1,011 polizas de seguro — un retorno de $3.54 por cada $1 invertido</h1>
+  <p>Google Ads + Meta Ads + Google Analytics + Search Console + Ventas · Datos anonimizados · Pipeline ETL automatico en Python</p>
+</div>
+
+<div class="context-box">
+  Cliente A es una empresa de seguros de vehiculos en Guatemala. En 2025 invirtio en publicidad digital en Google y Meta (Facebook/Instagram). Este analisis une por primera vez los datos de 5 sistemas distintos que antes vivian separados: <em>cuanto se invirtio? → cuanta gente llego al sitio? → cuantos seguros se vendieron?</em> El pipeline ETL construido en Python extrae, limpia y consolida estas 5 fuentes automaticamente en 0.2 segundos.
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-label">Inversion total</div><div class="kpi-value">$52,906</div><div class="kpi-sub">Todo 2025, en USD</div></div>
+  <div class="kpi green"><div class="kpi-label">Ventas generadas</div><div class="kpi-value">$187,413</div><div class="kpi-sub">1,011 polizas vendidas</div></div>
+  <div class="kpi green"><div class="kpi-label">Retorno sobre inversion</div><div class="kpi-value">3.5x</div><div class="kpi-sub">Por cada $1 → $3.54 en ventas</div></div>
+  <div class="kpi"><div class="kpi-label">Costo por poliza</div><div class="kpi-value">$52</div><div class="kpi-sub">Inversion / polizas</div></div>
+  <div class="kpi gray"><div class="kpi-label">Valor promedio de poliza</div><div class="kpi-value">$185</div><div class="kpi-sub">Ticket promedio en USD</div></div>
+</div>
+
+<!-- GLOBITO: SOLUCION -->
+<div class="speech">
+  <span class="who alexandra">Alexandra</span><span class="tiempo">2:00 - 5:00</span>
+  <div>Construimos un pipeline en Python con 4 archivos: Extract lee las 5 fuentes — Google Ads con 1,219 filas, Meta 26, Analytics 7,446, Search Console 335 y Ventas 1,011 polizas. Transform limpia todo: estandariza fechas, elimina duplicados y nulos — cero en ambos — convierte Quetzales a dolares y une las 5 fuentes por fecha. Load guarda la master table y genera reporte de calidad. Pipeline orquesta los tres en 0.2 segundos. Resultado: Master Table de 363 filas por 16 columnas.</div>
+</div>
+
+<!-- SECCION 1 -->
+<div class="section">
+  <div class="section-num">Seccion 1 — Inversion por canal</div>
+  <div class="section-title">Google Ads concentro el 81% del presupuesto — y dentro de Google, un solo tipo de campana genero el mayor resultado al menor costo</div>
+  <div class="section-sub">El presupuesto se repartio entre Google Ads ($42,658) y Meta Ads ($10,248).</div>
+  <div class="grid2">
+    <div><canvas id="chCanalInv"></canvas><p class="chart-note"><em>Nota.</em> Meta Ads representa el 19% del presupuesto pero no tiene trazabilidad directa hacia polizas vendidas.</p></div>
+    <div><canvas id="chGadsCanal"></canvas><p class="chart-note"><em>Nota.</em> Performance Max logro el menor costo por conversion con solo el 15% del presupuesto de Google; Display costo 25 veces mas.</p></div>
+  </div>
+</div>
+
+<!-- SECCION 2 -->
+<div class="section">
+  <div class="section-num">Seccion 2 — Comportamiento durante el ano</div>
+  <div class="section-title">La inversion fluctuo entre $2,143 y $6,413 — sin relacion directa entre alta inversion y mas ventas</div>
+  <div class="grid2">
+    <div><canvas id="chInvMes"></canvas><p class="chart-note"><em>Nota.</em> Sep-Oct menor inversion pero mayor trafico web — el organico compenso.</p></div>
+    <div><canvas id="chPolizasMes"></canvas><p class="chart-note"><em>Nota.</em> Ventas estables entre 69 y 107/mes — no siguen la inversion.</p></div>
+  </div>
+</div>
+
+<!-- GLOBITO: HALLAZGOS -->
+<div class="speech">
+  <span class="who koraima">Koraima</span><span class="tiempo">5:00 - 8:00</span>
+  <div>Con esa master table hicimos el analisis exploratorio. Inversion total: $52,906. Revenue: $187,413. ROAS de 3.54x. Performance Max con solo 15% del presupuesto genero el menor costo: $1.36 por conversion. Display costo $34.63 — 25 veces mas caro. En Meta, WhatsApp costo $193 por mensaje sin saber si se convirtieron en polizas. El segundo semestre concentro el 72% de las visitas con menor inversion. Y hay dos productos: Auto KM con 967 polizas a $168, y Auto Tradicional con 44 polizas a $560 — vale 3.3 veces mas pero no tiene campanas especificas.</div>
+</div>
+
+<!-- SECCION 3 -->
+<div class="section">
+  <div class="section-num">Seccion 3 — Ventas y productos</div>
+  <div class="section-title">El 96% de las polizas son Auto por Kilometro, pero Auto Tradicional vale 3.3 veces mas por poliza</div>
+  <div class="grid2">
+    <div><canvas id="chProductos"></canvas><p class="chart-note"><em>Nota.</em> Auto Tradicional = 4% de polizas pero 13% del revenue. Una Tradicional = 3.3 KM.</p></div>
+    <div><canvas id="chRevenueMes"></canvas><p class="chart-note"><em>Nota.</em> Marzo: mayor revenue ($21,590) con menor inversion del semestre.</p></div>
+  </div>
+  <div class="grid3" style="margin-top:16px">
+    <div class="mini-stat"><div class="mini-stat-val">$162,784</div><div class="mini-stat-label">Revenue Auto KM (87%)</div></div>
+    <div class="mini-stat"><div class="mini-stat-val">$24,629</div><div class="mini-stat-label">Revenue Auto Tradicional (13%)</div></div>
+    <div class="mini-stat"><div class="mini-stat-val">$52</div><div class="mini-stat-label">Costo promedio por poliza</div></div>
+  </div>
+</div>
+
+<!-- GLOBITO: DASHBOARD EN VIVO -->
+<div class="speech">
+  <span class="who juanse">Juan Sebastian</span><span class="tiempo">8:00 - 11:00</span>
+  <div>Todo esto esta publicado en vivo en GitHub Pages: thepipo93.github.io/etl-dashboard-ipalmera. Funciona en cualquier navegador, sin instalar nada. Tiene 7 secciones: inversion por canal, comportamiento mensual, ventas por producto, trafico web, busquedas organicas, que funciono y que no, y el pipeline ETL. Cada grafica tiene un titulo que dice la conclusion, no solo una etiqueta. Y debajo de cada una hay una nota con el hallazgo que no se ve a primera vista.</div>
+</div>
+
+<!-- SECCION 4 -->
+<div class="section">
+  <div class="section-num">Seccion 4 — Trafico web (Google Analytics 4)</div>
+  <div class="section-title">El sitio recibio 452,625 visitas en 2025 — el segundo semestre triplico al primero</div>
+  <canvas id="chGA4"></canvas>
+  <p class="chart-note"><em>Nota.</em> Jul-Dic = 72% de las visitas con menor inversion — el organico gano peso.</p>
+</div>
+
+<!-- SECCION 5 -->
+<div class="section">
+  <div class="section-num">Seccion 5 — Visibilidad en buscadores (Search Console)</div>
+  <div class="section-title">58,978 apariciones en Google, 2,668 clics organicos — CTR 4.5%</div>
+  <div class="grid2">
+    <div><canvas id="chGSC"></canvas><p class="chart-note"><em>Nota.</em> Posicion 4.2 = primer resultado en Google. Solo 1 de cada 22 hace clic.</p></div>
+    <div style="display:flex;flex-direction:column;justify-content:center;gap:12px">
+      <div class="mini-stat"><div class="mini-stat-val">58,978</div><div class="mini-stat-label">Apariciones en Google</div></div>
+      <div class="mini-stat"><div class="mini-stat-val">2,668</div><div class="mini-stat-label">Clics organicos</div></div>
+      <div class="mini-stat"><div class="mini-stat-val">4.5%</div><div class="mini-stat-label">CTR</div></div>
+      <div class="mini-stat"><div class="mini-stat-val">4.2</div><div class="mini-stat-label">Posicion promedio</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- GLOBITO: RECOMENDACIONES -->
+<div class="speech">
+  <span class="who christian">Christian</span><span class="tiempo">11:00 - 13:00</span>
+  <div>Con base en los datos, cuatro recomendaciones: Uno, conectar WhatsApp de Meta con un CRM para saber si esos 22 mensajes de $193 se convirtieron en polizas. Dos, crear campanas especificas para Auto Tradicional — solo 44 polizas pero cada una vale 3.3 veces mas. Tres, migrar de CSV a MySQL con CREATE TABLE dinamico como vimos en clase. Cuatro, automatizar la extraccion con APIs y exponer el pipeline como servicio con FastAPI.</div>
+</div>
+
+<!-- SECCION 6 -->
+<div class="section">
+  <div class="section-num">Seccion 6 — Que funciono, que no y donde invertir en 2026</div>
+  <div class="section-title">Performance Max fue lo mas eficiente — Meta Conversiones no tuvo trazabilidad</div>
+  <div class="verdict-grid">
+    <div class="verdict-card funciono">
+      <div class="verdict-title verde">Funciono — mantener</div>
+      <div class="verdict-item"><strong>Performance Max:</strong> 15% presupuesto, $1.36/conversion.</div>
+      <div class="verdict-item"><strong>Search:</strong> 75% presupuesto, $7.61/conversion, 4,179 conversiones.</div>
+      <div class="verdict-item"><strong>Meta Trafico:</strong> 186,688 visitas a $0.02/clic.</div>
+      <div class="verdict-item"><strong>Auto KM:</strong> 967 polizas los 12 meses.</div>
+    </div>
+    <div class="verdict-card nofunciono">
+      <div class="verdict-title rojo">No funciono — revisar</div>
+      <div class="verdict-item"><strong>Meta WhatsApp:</strong> $4,262 → 22 mensajes a $193 c/u. Sin trazabilidad.</div>
+      <div class="verdict-item"><strong>Display:</strong> $1,989, 57 conversiones a $34.63. 25x mas caro que PMax.</div>
+      <div class="verdict-item"><strong>Abril:</strong> $6,286 invertidos, peor costo por poliza del ano.</div>
+    </div>
+    <div class="verdict-card pendiente">
+      <div class="verdict-title amarillo">Sin dato — seguimiento</div>
+      <div class="verdict-item"><strong>WhatsApp → polizas?</strong> Sin CRM conectado.</div>
+      <div class="verdict-item"><strong>Meta Sep-Nov → ventas?</strong> Correlacion pero no causalidad.</div>
+    </div>
+    <div class="verdict-card oportunidad">
+      <div class="verdict-title azul">Oportunidad 2026</div>
+      <div class="verdict-item"><strong>Auto Tradicional:</strong> 44 polizas a $560. Campana dedicada.</div>
+      <div class="verdict-item"><strong>Reasignar Display → PMax:</strong> 25x mas eficiente.</div>
+      <div class="verdict-item"><strong>Conectar WhatsApp + CRM.</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- GLOBITO: CIERRE -->
+<div class="speech">
+  <span class="who todos">Todos</span><span class="tiempo">13:00 - 15:00</span>
+  <div>Limitaciones: enero parcial (GA4 desde dia 23), Meta sin trazabilidad, GSC y ventas manual, analisis descriptivo no predictivo. En resumen: este pipeline convierte lo que antes tomaba 4 horas de trabajo manual en un proceso automatizado de 0.2 segundos. Los datos estan anonimizados, el codigo esta en GitHub, y esta disenado para correr en cualquier maquina. Gracias.</div>
+</div>
+
+<!-- SECCION 7 -->
+<div class="section">
+  <div class="section-num">Seccion 7 — El pipeline ETL</div>
+  <div class="section-title">5 fuentes se unifican en 0.2 segundos — antes requeria trabajo manual en 5 hojas de calculo</div>
+  <table>
+    <thead><tr><th>Fuente</th><th>Registros</th><th>Cols</th><th>Metodo</th><th>Que aporta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Google Ads</strong></td><td>1,219</td><td>9</td><td>API REST v23</td><td>Inversion, clics, conversiones por campana</td></tr>
+      <tr><td><strong>Meta Ads</strong></td><td>26</td><td>14</td><td>Graph API v22.0</td><td>Inversion mensual, alcance, tipo resultado</td></tr>
+      <tr><td><strong>Google Analytics 4</strong></td><td>7,446</td><td>9</td><td>BigQuery SQL</td><td>Visitas diarias, fuente trafico, paginas vistas</td></tr>
+      <tr><td><strong>Search Console</strong></td><td>335</td><td>5</td><td>CSV manual</td><td>Apariciones Google, clics organicos, posicion</td></tr>
+      <tr><td><strong>Ventas</strong></td><td>1,011</td><td>6</td><td>CSV manual</td><td>Poliza, producto, fecha, monto en Quetzales</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<div class="footer">
+  Pipeline ETL · Python + pandas · Chart.js · Repo: github.com/AlexaLibreros15/Proyecto_Final_ETL · Dashboard: thepipo93.github.io/etl-dashboard-ipalmera<br>
+  Equipo: Christian Trujillo · Juan Sebastian Hoyos · Koraima Torres · Alexandra Libreros · UAO Maestria IA y Ciencia de Datos 2026-1S
+</div>
+
+<script>
+const ML=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const P='#1B4F72',L='#AED6F1',G='#BDC3C7',GR='#27AE60',OR='#E67E22',RD='#E74C3C';
+
+new Chart(document.getElementById('chCanalInv'),{type:'doughnut',data:{labels:['Google Ads — $42,658 (81%)','Meta Ads — $10,248 (19%)'],datasets:[{data:[42658,10248],backgroundColor:[P,OR],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},cutout:'60%'}});
+
+new Chart(document.getElementById('chGadsCanal'),{type:'bar',data:{labels:['Search','Perf. Max','Demand Gen','Display'],datasets:[{label:'Inversion USD',data:[31811,6575,2282,1989],backgroundColor:[P+'cc',GR+'cc',L,G],yAxisID:'y1',barPercentage:.6},{label:'Costo/conversion USD',data:[7.61,1.36,19.47,34.63],type:'line',borderColor:RD,backgroundColor:RD,pointRadius:6,yAxisID:'y2',tension:.3}]},options:{plugins:{legend:{position:'top',labels:{font:{size:11}}}},scales:{y1:{position:'left',grid:{color:'#eee'},beginAtZero:true,ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}},y2:{position:'right',grid:{display:false},beginAtZero:true,ticks:{callback:v=>'$'+v}},x:{grid:{display:false}}}}});
+
+const invMes=[3065,4767,3809,6286,4798,5184,4749,4060,2247,2143,5418,6413];
+new Chart(document.getElementById('chInvMes'),{type:'bar',data:{labels:ML,datasets:[{data:invMes,backgroundColor:P+'cc',barPercentage:.7}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eee'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}},x:{grid:{display:false}}}}});
+
+const polizasMes=[79,90,107,75,79,78,96,87,83,78,69,90];
+new Chart(document.getElementById('chPolizasMes'),{type:'bar',data:{labels:ML,datasets:[{data:polizasMes,backgroundColor:GR+'99',barPercentage:.7}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eee'}},x:{grid:{display:false}}}}});
+
+new Chart(document.getElementById('chProductos'),{type:'doughnut',data:{labels:['Auto KM — 967 polizas · $168 prom','Auto Tradicional — 44 polizas · $560 prom'],datasets:[{data:[967,44],backgroundColor:[P,OR],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},cutout:'60%'}});
+
+const revMes=[14672,15877,21590,13161,15167,12085,18126,13563,15218,16260,13280,18412];
+new Chart(document.getElementById('chRevenueMes'),{type:'bar',data:{labels:ML,datasets:[{label:'Ventas USD',data:revMes,backgroundColor:GR+'99'},{label:'Inversion USD',data:invMes,backgroundColor:P+'99'}]},options:{plugins:{legend:{position:'top',labels:{font:{size:11}}}},scales:{y:{beginAtZero:true,grid:{color:'#eee'},ticks:{callback:v=>'$'+(v/1000).toFixed(0)+'K'}},x:{grid:{display:false}}}}});
+
+const ga4S=[2525,42509,22467,41037,12157,10651,10316,6505,46403,56256,58210,143589];
+new Chart(document.getElementById('chGA4'),{type:'bar',data:{labels:ML,datasets:[{data:ga4S,backgroundColor:ga4S.map((v,i)=>i===0?'#BDC3C7':v>40000?P:v>20000?L:G+'99'),barPercentage:.7}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eee'},ticks:{callback:v=>(v/1000).toFixed(0)+'K'}},x:{grid:{display:false}}}}});
+
+const gscClics=[6,130,843,169,118,146,190,164,394,227,159,122];
+const gscImpr=[144,3529,11284,4114,5056,4596,3595,3817,4194,4483,6412,7754];
+new Chart(document.getElementById('chGSC'),{type:'bar',data:{labels:ML,datasets:[{label:'Impresiones',data:gscImpr,backgroundColor:L+'cc',yAxisID:'y2',barPercentage:.7},{label:'Clics',data:gscClics,type:'line',borderColor:P,backgroundColor:P,pointRadius:4,yAxisID:'y1',tension:.4}]},options:{plugins:{legend:{position:'top',labels:{font:{size:11}}}},scales:{y1:{position:'left',grid:{color:'#eee'},beginAtZero:true},y2:{position:'right',grid:{display:false},beginAtZero:true,ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}},x:{grid:{display:false}}}}});
+</script>
+</body>
+</html>
